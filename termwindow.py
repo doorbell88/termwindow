@@ -197,22 +197,22 @@ class Window(object):
 	# refresh a coordinate point back to its background
 	def erase_point(self, coordinate):
 		"""Returns a coordinate to its background value."""
-		x = coordinate[0]
-		y = coordinate[1]
+		x = int(coordinate[0])
+		y = int(coordinate[1])
 		try:
 			self.stage[x][y] = self.background[x][y]
 		except:
-			pass
+			self.stage[x][y] = ' '
 	
 	# refresh a coordinate point back to its background
 	def delete_point(self, coordinate):
 		"""Deletes a point on the stage (so it is a single space: ' ')."""
-		x = coordinate[0]
-		y = coordinate[1]
+		x = int(coordinate[0])
+		y = int(coordinate[1])
 		try:
 			self.stage[x][y] = self.blank[x][y]
 		except:
-			pass
+			self.stage[x][y] = ' '
 	
 	# generate a list of points inside a rectangular area defined by 2 corners
 	def _define_area(self, c1, c2):
@@ -387,9 +387,9 @@ class Window(object):
 			return y
 		return ret
 
-	# plot a line given coordinates, character, line type, and step type
-	def plot_line(self, p1, p2, *args, **kwargs):
-		"""Plots a line defined by points p1 and p2.
+	# define a line given coordinates, character, line type, and step type
+	def _define_line(self, p1, p2, *args, **kwargs):
+		"""Returns a list of coordinates in a line defined by points p1 and p2.
 
 		If p2='vertical' or 'horiontal': a vertical or horizontal line will be
 		drawn that passes through coordinate p1
@@ -434,6 +434,9 @@ class Window(object):
 		y_min = min(y1,y2)
 		y_max = max(y1,y2)
 		
+		# create a list for holding all coordinates of line
+		coordinate_list = []
+
 		# create f(x) if x_domain is greater
 		if (x_max - x_min) >= (y_max - y_min):
 			f = self._f(x1,x2,y1,y2)
@@ -443,10 +446,10 @@ class Window(object):
 				y = f(x)
 				if self._in_bounds((x,y)):
 					if step == 'step':
-							self.plot_point( (x,y), *args, **kwargs ) 
+							coordinate_list.append((x,y))
 					else:
 						if int(f(x)) != int(f(x+1)):
-							self.plot_point( (x,y), *args, **kwargs ) 
+							coordinate_list.append((x,y))
 
 		# create f(y) if y_domain is greater
 		elif (x_max - x_min) < (y_max - y_min):
@@ -457,10 +460,84 @@ class Window(object):
 				x = f(y)
 				if self._in_bounds((x,y)):
 					if step == 'step':
-							self.plot_point( (x,y), *args, **kwargs ) 
+							coordinate_list.append((x,y))
 					else:
 						if int(f(y)) != int(f(y+1)):
-							self.plot_point( (x,y), *args, **kwargs ) 
+							coordinate_list.append((x,y))
+
+		return coordinate_list
+	
+	# plot a line given coordinates, character, line type, and step type
+	def plot_line(self, p1, p2, *args, **kwargs):
+		"""Plots a line defined by points p1 and p2.
+
+		If p2='vertical' or 'horiontal': a vertical or horizontal line will be
+		drawn that passes through coordinate p1
+
+		line can by 'line', 'segment', or 'ray'
+			line='segment'  --  Plots from p1 to p2 [DEFAULT]
+			line='ray'		--  Plots from p1 to the border
+			line='line'		--  Plots from border to border
+		
+		step can be 'step' or ''
+			step='step'		--  Plots every point along the way, appearing like
+								a staircase. [DEFAULT]
+			step=''			--	Plots just points along the defined line, so it
+								doesn't look like a staircase, but the points
+								are more spaced out.
+
+		"""
+		coordinate_list = self._define_line(p1, p2, *args, **kwargs)
+		for coordinate in coordinate_list:
+			self.plot_point( coordinate, *args, **kwargs ) 
+
+	# plot a line given coordinates, character, line type, and step type
+	def erase_line(self, p1, p2, *args, **kwargs):
+		"""Erases a line defined by points p1 and p2.
+
+		If p2='vertical' or 'horiontal': a vertical or horizontal line will be
+		drawn that passes through coordinate p1
+
+		line can by 'line', 'segment', or 'ray'
+			line='segment'  --  Plots from p1 to p2 [DEFAULT]
+			line='ray'		--  Plots from p1 to the border
+			line='line'		--  Plots from border to border
+		
+		step can be 'step' or ''
+			step='step'		--  Plots every point along the way, appearing like
+								a staircase. [DEFAULT]
+			step=''			--	Plots just points along the defined line, so it
+								doesn't look like a staircase, but the points
+								are more spaced out.
+
+		"""
+		coordinate_list = self._define_line(p1, p2, *args, **kwargs)
+		for coordinate in coordinate_list:
+			self.erase_point( coordinate ) 
+
+	# plot a line given coordinates, character, line type, and step type
+	def delete_line(self, p1, p2, *args, **kwargs):
+		"""Deletes a line defined by points p1 and p2.
+
+		If p2='vertical' or 'horiontal': a vertical or horizontal line will be
+		drawn that passes through coordinate p1
+
+		line can by 'line', 'segment', or 'ray'
+			line='segment'  --  Plots from p1 to p2 [DEFAULT]
+			line='ray'		--  Plots from p1 to the border
+			line='line'		--  Plots from border to border
+		
+		step can be 'step' or ''
+			step='step'		--  Plots every point along the way, appearing like
+								a staircase. [DEFAULT]
+			step=''			--	Plots just points along the defined line, so it
+								doesn't look like a staircase, but the points
+								are more spaced out.
+
+		"""
+		coordinate_list = self._define_line(p1, p2, *args, **kwargs)
+		for coordinate in coordinate_list:
+			self.delete_point( coordinate ) 
 
 
 # Thing to be drawn in the window
