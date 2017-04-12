@@ -21,7 +21,42 @@ HEIGHT = int( stdout.read() ) - 1
 
 # Display of the window
 class Window(object):
+	"""
+	An object with a size equal to the size of the terminal window upon
+	instantiation.  The Window has a colored border that can be customized.
+	
+	Points can be plotted using (x,y) coordinate tuples, where:
+		(0,0) -- lower left corner of the border
+		(1,1) -- lower left corner of the drawable area
+		(self.width, self.height)     -- upper right corner of the border
+		(self.width-1, self.height-1) -- upper right corner of the drawing area
+	
+	Some easy reference coordinate values:
+		self.mx -- max x-value (same as self.width)
+		self.my -- max y-value (same as self.height)
+		self.cx -- center x-value
+		self.cy -- center y-value
+	
+	Window also has methods for drawing lines and ASCII-text "images"
+
+	"""
+
 	def __init__(self, border_color=None, top='=', bottom='=', left='|', right='|'):
+		"""
+		Initialize Window
+		
+		Clears terminal window and sets the cursor to invisible.
+		Draws a colored border, and creates 3 lists that embody the  x-y-space:
+			
+			self.stage      -- The actual space to be printed to terminal
+			self.blank		-- A blank area that has only a border
+			self.background -- The list that holds the background image
+							   (when you erase a point, the background is shown)
+							   This list must be set once you have your
+							   background drawn on self.stage using
+							   self.set_background()
+		
+		"""
 		self.width = WIDTH - 1
 		self.height = HEIGHT - 2
 
@@ -74,26 +109,31 @@ class Window(object):
 
 	# make cursor invisible
 	def hide_cursor(self):
+		"""Sets cursor to invisible."""
 		os.system('echo "\x1b[?25l"')
 		return
 
 	# make cursor visible again
 	def show_cursor(self):
+		"""Sets cursor back to visible."""
 		os.system('echo "\x1b[?25h"')
 		return
 
 	# show cursor and exit gracefully
 	def exit(self):
+		"""Sets cursor visible and exits."""
 		self.show_cursor()
 		exit()
 
 	# set background so self.erase() will just erase the foreground
 	def set_background(self):
+		"""Sets the background as what is currently shown on self.stage"""
 		self.background = deepcopy(self.stage)
 		return
 
 	# print the window in terminal
 	def display(self):
+		"""Refreshes the image of the stage."""
 		# Bring cursor back up to top left corner
 		os.system('tput cup 0 0')
 		# print
@@ -104,6 +144,7 @@ class Window(object):
 			print col_string
 
 	def _get_character_args(self, *args, **kwargs):
+		"""Gets character, color, on_color, and attributes from *args, **kwargs"""
 		# Blank variables to start
 		color_arg = None
 		on_color_arg = None
@@ -129,6 +170,7 @@ class Window(object):
 
 	# plot a coordinate in a window list
 	def plot_point(self, coordinate, *args, **kwargs):
+		"""Plots a character at an (x,y) coordinate of self.stage"""
 		x = coordinate[0]
 		y = coordinate[1]
 		
@@ -154,6 +196,7 @@ class Window(object):
 	
 	# refresh a coordinate point back to its background
 	def erase_point(self, coordinate):
+		"""Returns a coordinate to its background value."""
 		x = coordinate[0]
 		y = coordinate[1]
 		try:
@@ -163,6 +206,7 @@ class Window(object):
 	
 	# refresh a coordinate point back to its background
 	def delete_point(self, coordinate):
+		"""Deletes a point on the stage (so it is a single space: ' ')."""
 		x = coordinate[0]
 		y = coordinate[1]
 		try:
@@ -172,6 +216,8 @@ class Window(object):
 	
 	# generate a list of points inside a rectangular area defined by 2 corners
 	def _define_area(self, c1, c2):
+		"""Returns a list containting all coordinates of a rectangular area
+		given the coordinates of two opposite corners."""
 		x1, y1 = c1[0], c1[1]
 		x2, y2 = c2[0], c2[1]
 		x_range = [min([x1,x2]), max([x1,x2])+1]
@@ -184,24 +230,49 @@ class Window(object):
 
 	# plot a rectangular area defined by two corners
 	def plot_area(self, c1, c2, *args, **kwargs):
+		"""Plot points in a rectangular area defined by the coordinates of two
+		opposite corners of the rectangle"""
 		area = self._define_area(c1, c2)
 		for coordinate in area:
 			self.plot_point(coordinate, *args, **kwargs)
 
 	# erase a rectangular area defined by two corners
 	def erase_area(self, c1, c2):
+		"""Erase points in a rectangular area defined by the coordinates of two
+		opposite corners of the rectangle"""
 		area = self._define_area(c1, c2)
 		for coordinate in area:
 			self.erase_point(coordinate)
 
 	# erase a rectangular area defined by two corners
 	def delete_area(self, c1, c2):
+		"""Delete points in a rectangular area defined by the coordinates of two
+		opposite corners of the rectangle"""
 		area = self._define_area(c1, c2)
 		for coordinate in area:
 			self.delete_point(coordinate)
 
 	# draw a multi-character "image"
 	def draw(self, coordinate, image, *args, **kwargs):
+		"""Draw an ASCII-text image at a coordinate.
+		An image can be of three forms:
+		
+		(1) String:
+			image = 'example'
+
+		(2) List of Strings:
+			image = [' _--.-^---_____/',
+					 '(__`______===== ',
+					 '    V          \\']
+
+		(3) List of Lists of Strings:
+			image = [[' _--.-^---_____/'],
+					 ['(__`______===== '],
+					 ['    V          \\']]
+
+		NOTE:  In forms (2) and (3), each string should be the same length.
+
+		"""
 		x = coordinate[0]
 		y = coordinate[1]
 
@@ -230,7 +301,9 @@ class Window(object):
 			return
 			
 	# return True if inside the border, False otherwise
-	def _in_bounds(self, x,y):
+	def _in_bounds(self, coordinate):
+		"""Returns True if coordinate is inside the border."""
+		(x,y) = coordinate
 		if  int(x) > 0 and int(x) < self.width and \
 			int(y) > 0 and int(y) < self.height:
 				return True
@@ -239,6 +312,11 @@ class Window(object):
 
 	# get direction of 'a' (x or y) --> (+1 or -1)
 	def _a_dir(self, a1,a2):
+		"""Returns direction of a1 and a2:
+				+1 if a2 > a1
+				-1 if a2 < a1
+				0  if a2 == a1
+		"""
 		if a2 - a1 > 0:
 			a_dir = 1
 		elif a2 - a1 < 0:
@@ -250,12 +328,15 @@ class Window(object):
 
 	# Get endpoints for line segments, rays, and lines
 	def _endpoints(self, f, a1,a2, domain='x', line='segment'):
+		"""Returns the domain values in order from smallest to largest.
+		
+		Used for plotting lines, rays, and line segments.
+		
+		"""
 		# plot line from (x1,y1) to (x2,y2)
 		if line == 'segment':
 			a_min = min([a1,a2])
 			a_max = max([a1,a2])
-			b_min = f(a_min)
-			b_max = f(a_max)
 
 		# begin at (a1,b1) and go through to edge of window			
 		elif line == 'ray':
@@ -275,8 +356,6 @@ class Window(object):
 			else:
 				a_min = a1
 				a_max = a1
-			b_min = min( f(a_min), f(a_max) )
-			b_max = max( f(a_min), f(a_max) )
 
 		# line goes through from end-to-end
 		else:
@@ -285,13 +364,17 @@ class Window(object):
 				a_max = self.mx-1
 			elif domain == 'y':
 				a_max = self.my-1
-			b_min = f(a_min)
-			b_max = f(a_max)
 
-		return a_min, a_max, b_min, b_max
+		return a_min, a_max
 
 	# create a function for evaluating this specific slope-intercept
 	def _f(self, x1,x2,y1,y2):
+		"""Returns a function in slope-intercept form which only takes one
+		argument.
+
+		Used in plotting lines, rays, and line segments.
+		
+		"""
 		# slope and y-intercept
 		m = float((y2-y1)) / float((x2-x1))
 		y0 = y1 - float(m * x1)
@@ -306,6 +389,24 @@ class Window(object):
 
 	# plot a line given coordinates, character, line type, and step type
 	def plot_line(self, p1, p2, *args, **kwargs):
+		"""Plots a line defined by points p1 and p2.
+
+		If p2='vertical' or 'horiontal': a vertical or horizontal line will be
+		drawn that passes through coordinate p1
+
+		line can by 'line', 'segment', or 'ray'
+			line='segment'  --  Plots from p1 to p2 [DEFAULT]
+			line='ray'		--  Plots from p1 to the border
+			line='line'		--  Plots from border to border
+		
+		step can be 'step' or ''
+			step='step'		--  Plots every point along the way, appearing like
+								a staircase. [DEFAULT]
+			step=''			--	Plots just points along the defined line, so it
+								doesn't look like a staircase, but the points
+								are more spaced out.
+
+		"""
 		# get first coordinate
 		(x1, y1) = p1
 
@@ -336,11 +437,11 @@ class Window(object):
 		# create f(x) if x_domain is greater
 		if (x_max - x_min) >= (y_max - y_min):
 			f = self._f(x1,x2,y1,y2)
-			x_min, x_max, y_min, y_max = self._endpoints(f, x1,x2, 'x', line)
+			x_min, x_max = self._endpoints(f, x1,x2, 'x', line)
 			x_domain = range(x_min, x_max+1)
 			for x in x_domain:
 				y = f(x)
-				if self._in_bounds(x,y):
+				if self._in_bounds((x,y)):
 					if step == 'step':
 							self.plot_point( (x,y), *args, **kwargs ) 
 					else:
@@ -350,11 +451,11 @@ class Window(object):
 		# create f(y) if y_domain is greater
 		elif (x_max - x_min) < (y_max - y_min):
 			f = self._f(y1,y2,x1,x2)
-			y_min, y_max, x_min, x_max = self._endpoints(f, y1,y2, 'y', line)
+			y_min, y_max = self._endpoints(f, y1,y2, 'y', line)
 			y_domain = range(y_min, y_max+1)
 			for y in y_domain:
 				x = f(y)
-				if self._in_bounds(x,y):
+				if self._in_bounds((x,y)):
 					if step == 'step':
 							self.plot_point( (x,y), *args, **kwargs ) 
 					else:
@@ -364,7 +465,34 @@ class Window(object):
 
 # Thing to be drawn in the window
 class Thing(object):
+	"""
+	An Object with methods that allow it to draw itself in a Window object.
+
+	POSITION, DIRECTION, SPEED
+	self.position can be plotted using (x,y) coordinate tuples, where:
+		(0,0) -- lower left corner of the Window border
+		(1,1) -- lower left corner of the drawable area
+		(Window.width, Window.height)     -- upper right corner of the Window border
+		(Window.width-1, Window.height-1) -- upper right corner of the drawing area
+	self.direction is a list: [x_direction, y_direction]
+	self.speed should be a positive integer
+	
+	COLORS
+	self.color    -- Foreground text color
+	self.on_color -- Background text color
+	self.attrs    -- Text attributes ('bold', 'underline', 'blink',
+									  'reverse', 'concealed', 'dark')
+	self.ignore   -- Character to ignore when drawing self.image
+					 (This avoids drawing dark rectangles around an object
+					 that is not so rectangular)
+
+	"""
 	def __init__(self, window, position, *args, **kwargs):
+		"""
+		Initializes a Thing object given the window, position, and any arguments
+		given (like color, direction, image, etc.)
+
+		"""
 		self.window = window
 		self.position = tuple(position)
 		
@@ -395,6 +523,7 @@ class Thing(object):
 
 	# get size of Thing's image
 	def _get_size(self):
+		"""Returns the size of an image as a list [x-size, y-size]"""
 		self.size = [0,0]
 		image = self.image
 
@@ -416,6 +545,7 @@ class Thing(object):
 			
 	# get position, direction, and speed from arguments
 	def _get_pds(self, *args, **kwargs):
+		"""Get position, direction, and speed from *args, **kwargs"""
 		# new position, direction, and speed
 		p2 = None
 		d2 = None
@@ -440,6 +570,7 @@ class Thing(object):
 
 	# draw Thing's image
 	def draw(self, *args, **kwargs):
+		"""Draw self.image at coordinate self.position"""
 		# get position, direction, and speed from *args, **kwargs
 		p2, d2, s2 = self._get_pds(*args, **kwargs)
 		if p2 is not None:
@@ -458,6 +589,7 @@ class Thing(object):
 
 	# erase Thing's image at current position (refresh to background)
 	def erase(self):
+		"""Erase own image at coordinate self.position"""
 		self._get_size()
 		window = self.window
 		c1 = (self.position[0], self.position[1]+1)
@@ -466,12 +598,22 @@ class Thing(object):
 
 	# erase current position, and draw on a new coordinate
 	def place(self, coordinate):
+		"""Simply place the image at a new location."""
 		self.erase()
 		self.position = coordinate
 		self.draw()
 
 	# move image from one location to another
 	def move(self, *args, **kwargs):
+		"""Move the Thing.
+
+		move() can be given a new position, direction, or speed.
+
+		If move() is given no arguments, it will move the Thing from its current
+		position to a new position defined by translating over by
+			self.direction * self.speed
+
+		"""
 		# get position, direction, and speed from *args, **kwargs
 		p2, d2, s2 = self._get_pds(*args, **kwargs)
 
