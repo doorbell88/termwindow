@@ -182,8 +182,6 @@ class Window(object):
 			color_arg = None
 		if on_color_arg not in self.on_colors:
 			on_color_arg = None
-		if attrs_arg not in self.color_attrs:
-			attrs_arg = None
 
 		if 0 < x < self.width and 0 < y < self.height:
 			try:
