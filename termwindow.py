@@ -6,18 +6,15 @@ terminal window.  Plots ASCII characters in an [x][y] coordinate system.
 
 # Import modules
 import os
-from copy import deepcopy
-from subprocess import Popen, PIPE
-from termcolor import colored, cprint
+import subprocess
 from time import sleep
+from copy import deepcopy
+from termcolor import colored, cprint
 
 # Get size of terminal
-#width
-stdout = Popen('tput cols', shell=True, stdout=PIPE).stdout
-WIDTH = int( stdout.read() )
-#height
-stdout = Popen('tput lines', shell=True, stdout=PIPE).stdout
-HEIGHT = int( stdout.read() ) - 1
+WIDTH = int( subprocess.check_output(['tput','cols']) )
+HEIGHT = int( subprocess.check_output(['tput','lines']) ) - 1
+
 
 # Display of the window
 class Window(object):
@@ -106,6 +103,16 @@ class Window(object):
 		# make a copy of the blank, bordered background
 		self.blank = deepcopy(self.stage)
 		self.background = deepcopy(self.stage)
+
+	# set stage as background
+	def erase(self):
+		"""Return entire stage to background."""
+		self.stage = deepcopy(self.background)
+	
+	# set stage as blank
+	def delete(self):
+		"""Make entire stage blank."""
+		self.stage = deepcopy(self.blank)
 
 	# make cursor invisible
 	def hide_cursor(self):
@@ -298,15 +305,19 @@ class Window(object):
 		else:
 			return
 			
-	# return True if inside the border, False otherwise
-	def _in_bounds(self, coordinate):
-		"""Returns True if coordinate is inside the border."""
+	# return True if inside the defined area, False otherwise
+	def _is_in_area(self, coordinate, x_min, x_max, y_min, y_max):
+		"""Returns True if coordinate is inside the area."""
 		(x,y) = coordinate
-		if  int(x) > 0 and int(x) < self.width and \
-			int(y) > 0 and int(y) < self.height:
-				return True
+		if x_min <= int(x) <= x_max and y_min <= int(y) <= y_max:
+			return True
 		else:
 			return False
+		
+	# return True if inside the border, False otherwise
+	def _is_in_bounds(self, coordinate):
+		"""Returns True if coordinate is inside the border."""
+		return self._is_in_area(coordinate, 1, self.width-1, 1, self.height-1)
 
 	# get direction of 'a' (x or y) --> (+1 or -1)
 	def _a_dir(self, a1,a2):
@@ -442,7 +453,7 @@ class Window(object):
 			x_domain = range(x_min, x_max+1)
 			for x in x_domain:
 				y = f(x)
-				if self._in_bounds((x,y)):
+				if self._is_in_bounds((x,y)):
 					if step == 'step':
 							coordinate_list.append((x,y))
 					else:
@@ -456,7 +467,7 @@ class Window(object):
 			y_domain = range(y_min, y_max+1)
 			for y in y_domain:
 				x = f(y)
-				if self._in_bounds((x,y)):
+				if self._is_in_bounds((x,y)):
 					if step == 'step':
 							coordinate_list.append((x,y))
 					else:
@@ -536,6 +547,56 @@ class Window(object):
 		coordinate_list = self._define_line(p1, p2, *args, **kwargs)
 		for coordinate in coordinate_list:
 			self.delete_point( coordinate ) 
+
+	def plot_function(self, function, A=1, m=1, b=None, *args, **kwargs):
+		"""Plot a function in the form
+			A * function(m*x) + b
+		"""
+		color_arg, on_color_arg, attrs_arg, character = \
+		self._get_character_args(*args, **kwargs)
+
+		image = character
+
+		if b == None:
+			b = self.cy
+
+		for x in range(self.width):
+			y = A * function(m*x) + b
+			self.draw( (x,y), image, *args, **kwargs)
+	
+	def draw_axis(self, axis='x', position=0, *args, **kwargs):
+		"""Draws a simple x- or y-axis."""
+		if axis.lower() == 'x':
+			x = 1
+			y = position
+			self.plot_line( (x,y), 'horizontal', '-', *args, **kwargs )
+		elif axis.lower() == 'y':
+			x = position
+			y = 1
+			self.plot_line( (x,y), 'vertical', '|', *args, **kwargs )
+		else:
+			return False
+
+	def draw_axes(self, origin, *args, **kwargs):
+		"""Draws axes at the given origin."""
+		# get origin
+		(x,y) = origin
+		
+		# draw lines
+		self.draw_axis('x', y, *args, **kwargs)
+		self.draw_axis('y', x, *args, **kwargs)
+
+		# draw origin
+		self.plot_point( origin, '0', *args, **kwargs)
+
+		# draw tic marks
+		pass
+
+	def graph(self, function, origin=(0,0), scale=[2,1], bounds=None):
+		pass
+
+	def draw_under(self, function, origin=(0,0)):
+		pass
 
 
 # Thing to be drawn in the window
