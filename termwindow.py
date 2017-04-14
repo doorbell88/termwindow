@@ -516,9 +516,13 @@ class Window(object):
 								doesn't look like a staircase, but the points
 								are more spaced out.
 
+		returns: coordinate_list
+
 		"""
 		coordinate_list = self._define_line(p1, p2, *args, **kwargs)
 		self.plot_list(coordinate_list, *args, **kwargs)
+
+		return coordinate_list
 
 	# plot a line given coordinates, character, line type, and step type
 	def erase_line(self, p1, p2, *args, **kwargs):
@@ -583,21 +587,21 @@ class Window(object):
 		color_arg, on_color_arg, attrs_arg, character = \
 		self._get_character_args(*args, **kwargs)
 
-		# get image (or character) to draw at each point
-		image = kwargs.pop('image', character)
-		
 		# plot first point
 		self.draw(coordinate_list[0], image, *args, **kwargs)
 
+		# plot the last line, if desired
+		if wrap == True:
+			self.plot_line(coordinate[0], coordinate[-1], *args, **kwargs)
+
 		# plot the rest of points, and plot lines between each consecutive points
 		for i in range(1, len(coordinate_list)):
-			self.draw(coordinate_list[i], image, *args, **kwargs)
-			self.plot_line(coordinate_list[i-1], coordinate_list[i], *args, **kwargs)
+			self.plot_line(coordinate_list[i-1], coordinate_list[i],
+						   image=image, *args, **kwargs)
+			self.draw(coordinate_list[i], image=image, *args, **kwargs)
 			if delay is not None:
 				sleep(delay)
 				self.display()
-		if wrap == True:
-			self.plot_line(coordinate[0], coordinate[-1], *args, **kwargs)
 			
 	# draw an x-axis or y-axis
 	def draw_axis(self, axis='x', position=0, *args, **kwargs):
@@ -702,10 +706,10 @@ class Window(object):
 			pass
 		
 		if connect_dots == True:
-			self.connect_dots(coordinate_list, image, wrap=False, delay=delay,
+			self.connect_dots(coordinate_list, image=image, delay=delay, wrap=False, 
 							  *args, **kwargs)
 		else:
-			self.plot_list(coordinate_list, image, delay=delay, *args, **kwargs)
+			self.plot_list(coordinate_list, image=image, delay=delay, *args, **kwargs)
 
 		return coordinate_list, (x0,y0)
 
