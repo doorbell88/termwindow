@@ -596,7 +596,7 @@ class Window(object):
 		pass
 
 	def graph(self, function, origin=(0,0), scale=[2,1],
-			  bounds=None, axis='xy', axis_color=None, delay=0,
+			  bounds=None, axis='xy', axis_color=None, delay=None,
 			  *args, **kwargs):
 		"""
 		Graph a function in the form at the specified origin or in the specified
@@ -640,7 +640,7 @@ class Window(object):
 				y = function(x)
 				j = (y / scale_y) + y0
 				self.draw( (i,j), image, *args, **kwargs)
-				if delay > 0:
+				if delay is not None:
 					sleep(delay)
 					self.display()
 			except:
