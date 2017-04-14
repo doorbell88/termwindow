@@ -568,25 +568,7 @@ class Window(object):
 		for coordinate in coordinate_list:
 			self.delete_point( coordinate ) 
 
-	def plot_function(self, function, A=1, m=1, b=None, delay=0, *args, **kwargs):
-		"""Plot a function in the form
-			A * function(m*x) + b
-		"""
-		color_arg, on_color_arg, attrs_arg, character = \
-		self._get_character_args(*args, **kwargs)
-
-		image = kwargs.pop('image', character)
-
-		if b == None:
-			b = self.cy
-
-		for x in range(self.width):
-			y = A * function(m*x) + b
-			self.draw( (x,y), image, *args, **kwargs)
-			if delay > 0:
-				sleep(delay)
-				self.display()
-	
+	# draw an x-axis or y-axis
 	def draw_axis(self, axis='x', position=0, *args, **kwargs):
 		"""Draws a simple x- or y-axis."""
 		if axis.lower() == 'x':
@@ -600,6 +582,7 @@ class Window(object):
 		else:
 			return False
 
+	# draw x and y axes and a 0 at the origin
 	def draw_axes(self, origin, *args, **kwargs):
 		"""Draws axes at the given origin."""
 		# get origin
@@ -615,15 +598,18 @@ class Window(object):
 		# draw tic marks
 		pass
 
+	# graph a function
 	def graph(self, function, origin=(0,0), scale=[2,1],
 			  bounds=None, axis='xy', axis_color=None, delay=None,
 			  *args, **kwargs):
 		"""
-		Graph a function in the form at the specified origin or in the specified
+		Graph a function at the specified origin or in the specified
 		x and y range.
 
 		If delay is a non-zero number, then the graph will "animate" with the 
 		specified delay after each "frame".
+
+		returns: coordinate_list, (x0,y0)
 
 		"""
 		# get character arguments
@@ -645,12 +631,16 @@ class Window(object):
 			[scale_x, scale_y] = scale
 
 		# Drax axes (or axis)
-		if axis.lower() == 'x':
+		if axis is None:
+			pass
+		elif axis.lower() == 'x':
 			self.draw_axis( axis='x', position=y0, color=axis_color )
 		elif axis.lower() == 'y':
 			self.draw_axis( axis='y', position=x0, color=axis_color )
-		else:
+		elif axis.lower() in ['xy', 'yx']:
 			self.draw_axes( (x0,y0), color=axis_color )
+		else:
+			pass
 		
 		# graph function (shifted and scaled)
 		coordinate_list = []
@@ -664,6 +654,9 @@ class Window(object):
 				pass
 		self.plot_list(coordinate_list, image, delay=delay, *args, **kwargs)
 
+		return coordinate_list, (x0,y0)
+
+	# draw lines under a function (ex: for integral)
 	def draw_under(self, function, origin=(0,0)):
 		pass
 
