@@ -598,6 +598,39 @@ class Window(object):
 		# draw tic marks
 		pass
 
+	# generate a list of coordinates for plotting a function
+	def graph_coordinates(self, function, origin=(0,0), scale=[2,1], bounds=None):
+		"""
+		Generate coordinate list for a function at the specified origin or in the
+		specified x and y range.
+
+		returns: coordinate_list, (x0,y0)
+
+		"""
+		# get origin and axis scale
+		if type(bounds) == type([]) and len(bounds) == 4:
+			x_min, x_max, y_min, y_max, = bounds
+			scale_x = 1.0 * (x_max-x_min) / self.width
+			scale_y = 1.0 * (y_max-y_min) / self.height
+			x0 = -1.0 * (x_min / scale_x)
+			y0 = -1.0 * (y_min / scale_y)
+		else:
+			(x0,y0) = origin
+			[scale_x, scale_y] = scale
+
+		# graph function (shifted and scaled)
+		coordinate_list = []
+		for i in range(self.width):
+			try:
+				x = (i - x0) * scale_x
+				y = function(x)
+				j = (y / scale_y) + y0
+				coordinate_list.append((i,j))
+			except:
+				pass
+
+		return coordinate_list, (x0,y0)
+
 	# graph a function
 	def graph(self, function, origin=(0,0), scale=[2,1],
 			  bounds=None, axis='xy', axis_color=None, delay=None,
@@ -619,17 +652,12 @@ class Window(object):
 		# get image (or character) to draw at each point
 		image = kwargs.pop('image', character)
 		
-		# get origin and axis scale
-		if type(bounds) == type([]) and len(bounds) == 4:
-			x_min, x_max, y_min, y_max, = bounds
-			scale_x = 1.0 * (x_max-x_min) / self.width
-			scale_y = 1.0 * (y_max-y_min) / self.height
-			x0 = -1.0 * (x_min / scale_x)
-			y0 = -1.0 * (y_min / scale_y)
-		else:
-			(x0,y0) = origin
-			[scale_x, scale_y] = scale
-
+		# generate list of coordinates for plotting
+		coordinate_list, (x0,y0) = self.graph_coordinates(function,
+														  origin=origin,
+														  scale=scale,
+														  bounds=bounds)
+		
 		# Drax axes (or axis)
 		if axis is None:
 			pass
@@ -642,19 +670,7 @@ class Window(object):
 		else:
 			pass
 		
-		# graph function (shifted and scaled)
-		coordinate_list = []
-		for i in range(self.width):
-			try:
-				x = (i - x0) * scale_x
-				y = function(x)
-				j = (y / scale_y) + y0
-				coordinate_list.append((i,j))
-			except:
-				pass
 		self.plot_list(coordinate_list, image, delay=delay, *args, **kwargs)
-
-		return coordinate_list, (x0,y0)
 
 	# draw lines under a function (ex: for integral)
 	def draw_under(self, function, origin=(0,0)):
