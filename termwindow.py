@@ -233,6 +233,27 @@ class Window(object):
 				area.append( (x,y) )
 		return area
 
+	# Draw image at each coordinate in a list of coordinates
+	def plot_list(self, coordinate_list, *args, **kwargs):
+		"""Draws image at each point in coordinate_list.
+		This is useful for drawing something and then being able to clear
+		or delete every point.
+		"""
+		# get character arguments
+		color_arg, on_color_arg, attrs_arg, character = \
+		self._get_character_args(*args, **kwargs)
+
+		# get image (or character) to draw at each point
+		image = kwargs.pop('image', character)
+		delay = kwargs.get('delay', None)
+		
+		# draw image at each coordinate in the list
+		for coordinate in coordinate_list:
+			self.draw(coordinate, image, *args, **kwargs)
+			if delay is not None:
+				sleep(delay)
+				self.display()
+
 	# plot a rectangular area defined by two corners
 	def plot_area(self, c1, c2, *args, **kwargs):
 		"""Plot points in a rectangular area defined by the coordinates of two
@@ -306,7 +327,7 @@ class Window(object):
 			return
 			
 	# return True if inside the defined area, False otherwise
-	def _is_in_area(self, coordinate, x_min, x_max, y_min, y_max):
+	def is_in_area(self, coordinate, x_min, x_max, y_min, y_max):
 		"""Returns True if coordinate is inside the area."""
 		(x,y) = coordinate
 		if x_min <= int(x) <= x_max and y_min <= int(y) <= y_max:
@@ -315,9 +336,9 @@ class Window(object):
 			return False
 		
 	# return True if inside the border, False otherwise
-	def _is_in_bounds(self, coordinate):
+	def is_in_bounds(self, coordinate):
 		"""Returns True if coordinate is inside the border."""
-		return self._is_in_area(coordinate, 1, self.width-1, 1, self.height-1)
+		return self.is_in_area(coordinate, 1, self.width-1, 1, self.height-1)
 
 	# get direction of 'a' (x or y) --> (+1 or -1)
 	def _a_dir(self, a1,a2):
@@ -453,7 +474,7 @@ class Window(object):
 			x_domain = range(x_min, x_max+1)
 			for x in x_domain:
 				y = f(x)
-				if self._is_in_bounds((x,y)):
+				if self.is_in_bounds((x,y)):
 					if step == 'step':
 							coordinate_list.append((x,y))
 					else:
@@ -467,7 +488,7 @@ class Window(object):
 			y_domain = range(y_min, y_max+1)
 			for y in y_domain:
 				x = f(y)
-				if self._is_in_bounds((x,y)):
+				if self.is_in_bounds((x,y)):
 					if step == 'step':
 							coordinate_list.append((x,y))
 					else:
@@ -497,8 +518,7 @@ class Window(object):
 
 		"""
 		coordinate_list = self._define_line(p1, p2, *args, **kwargs)
-		for coordinate in coordinate_list:
-			self.plot_point( coordinate, *args, **kwargs ) 
+		self.plot_list(coordinate_list, *args, **kwargs)
 
 	# plot a line given coordinates, character, line type, and step type
 	def erase_line(self, p1, p2, *args, **kwargs):
@@ -606,6 +626,7 @@ class Window(object):
 		specified delay after each "frame".
 
 		"""
+		# get character arguments
 		color_arg, on_color_arg, attrs_arg, character = \
 		self._get_character_args(*args, **kwargs)
 
@@ -613,38 +634,35 @@ class Window(object):
 		image = kwargs.pop('image', character)
 		
 		# get origin and axis scale
-		if bounds == None:
-			(x0,y0) = origin
-			[scale_x, scale_y] = scale
-
-		elif type(bounds) == type([]) and len(bounds) == 4:
+		if type(bounds) == type([]) and len(bounds) == 4:
 			x_min, x_max, y_min, y_max, = bounds
-
 			scale_x = 1.0 * (x_max-x_min) / self.width
 			scale_y = 1.0 * (y_max-y_min) / self.height
 			x0 = -1.0 * (x_min / scale_x)
 			y0 = -1.0 * (y_min / scale_y)
+		else:
+			(x0,y0) = origin
+			[scale_x, scale_y] = scale
 
 		# Drax axes (or axis)
-		if axis.lower() in ['xy', 'yx', '']:
-			self.draw_axes( (x0,y0), color=axis_color )
-		elif axis.lower() == 'x':
+		if axis.lower() == 'x':
 			self.draw_axis( axis='x', position=y0, color=axis_color )
 		elif axis.lower() == 'y':
 			self.draw_axis( axis='y', position=x0, color=axis_color )
+		else:
+			self.draw_axes( (x0,y0), color=axis_color )
 		
 		# graph function (shifted and scaled)
+		coordinate_list = []
 		for i in range(self.width):
 			try:
 				x = (i - x0) * scale_x
 				y = function(x)
 				j = (y / scale_y) + y0
-				self.draw( (i,j), image, *args, **kwargs)
-				if delay is not None:
-					sleep(delay)
-					self.display()
+				coordinate_list.append((i,j))
 			except:
 				pass
+		self.plot_list(coordinate_list, image, delay=delay, *args, **kwargs)
 
 	def draw_under(self, function, origin=(0,0)):
 		pass
