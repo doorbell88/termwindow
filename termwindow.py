@@ -192,12 +192,12 @@ class Window(object):
 
 		if 0 < x < self.width and 0 < y < self.height:
 			try:
-				self.stage[int(x)][int(y)] = colored(character,
-												   color=color_arg,
-												   on_color=on_color_arg,
-												   attrs=attrs_arg)
+				self.stage[int(x+0.5)][int(y+0.5)] = colored(character,
+												     color=color_arg,
+												     on_color=on_color_arg,
+												     attrs=attrs_arg)
 			except:
-				self.stage[int(x)][int(y)] = character
+				self.stage[int(x+0.5)][int(y+0.5)] = character
 	
 	# refresh a coordinate point back to its background
 	def erase_point(self, coordinate):
@@ -471,7 +471,7 @@ class Window(object):
 		if (x_max - x_min) >= (y_max - y_min):
 			f = self._f(x1,x2,y1,y2)
 			x_min, x_max = self._endpoints(f, x1,x2, 'x', line)
-			x_domain = range(x_min, x_max+1)
+			x_domain = range(int(x_min), int(x_max+1))
 			for x in x_domain:
 				y = f(x)
 				if self.is_in_bounds((x,y)):
@@ -485,7 +485,7 @@ class Window(object):
 		elif (x_max - x_min) < (y_max - y_min):
 			f = self._f(y1,y2,x1,x2)
 			y_min, y_max = self._endpoints(f, y1,y2, 'y', line)
-			y_domain = range(y_min, y_max+1)
+			y_domain = range(int(y_min), int(y_max+1))
 			for y in y_domain:
 				x = f(y)
 				if self.is_in_bounds((x,y)):
@@ -568,6 +568,37 @@ class Window(object):
 		for coordinate in coordinate_list:
 			self.delete_point( coordinate ) 
 
+	# draw lines between each dot in a list of coordinates
+	def connect_dots(self, coordinate_list, image, wrap=True, delay=None, *args, **kwargs):
+		"""Draws a line between each two consecutive coordinates in a
+		coordinate list.
+
+		If wrap == True, the first and last coordinate will also be connected.
+
+		If delay is given (float), it will appear to "animate", with a delay
+		between each "frame".
+
+		"""
+		# get character arguments
+		color_arg, on_color_arg, attrs_arg, character = \
+		self._get_character_args(*args, **kwargs)
+
+		# get image (or character) to draw at each point
+		image = kwargs.pop('image', character)
+		
+		# plot first point
+		self.draw(coordinate_list[0], image, *args, **kwargs)
+
+		# plot the rest of points, and plot lines between each consecutive points
+		for i in range(1, len(coordinate_list)):
+			self.draw(coordinate_list[i], image, *args, **kwargs)
+			self.plot_line(coordinate_list[i-1], coordinate_list[i], *args, **kwargs)
+			if delay is not None:
+				sleep(delay)
+				self.display()
+		if wrap == True:
+			self.plot_line(coordinate[0], coordinate[-1], *args, **kwargs)
+			
 	# draw an x-axis or y-axis
 	def draw_axis(self, axis='x', position=0, *args, **kwargs):
 		"""Draws a simple x- or y-axis."""
@@ -634,7 +665,7 @@ class Window(object):
 	# graph a function
 	def graph(self, function, origin=(0,0), scale=[2,1],
 			  bounds=None, axis='xy', axis_color=None, delay=None,
-			  *args, **kwargs):
+			  connect_dots=False, *args, **kwargs):
 		"""
 		Graph a function at the specified origin or in the specified
 		x and y range.
@@ -670,7 +701,13 @@ class Window(object):
 		else:
 			pass
 		
-		self.plot_list(coordinate_list, image, delay=delay, *args, **kwargs)
+		if connect_dots == True:
+			self.connect_dots(coordinate_list, image, wrap=False, delay=delay,
+							  *args, **kwargs)
+		else:
+			self.plot_list(coordinate_list, image, delay=delay, *args, **kwargs)
+
+		return coordinate_list, (x0,y0)
 
 	# draw lines under a function (ex: for integral)
 	def draw_under(self, function, origin=(0,0)):
