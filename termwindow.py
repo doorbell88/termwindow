@@ -548,14 +548,14 @@ class Window(object):
 		for coordinate in coordinate_list:
 			self.delete_point( coordinate ) 
 
-	def plot_function(self, function, A=1, m=1, b=None, *args, **kwargs):
+	def plot_function(self, function, A=1, m=1, b=None, delay=0, *args, **kwargs):
 		"""Plot a function in the form
 			A * function(m*x) + b
 		"""
 		color_arg, on_color_arg, attrs_arg, character = \
 		self._get_character_args(*args, **kwargs)
 
-		image = character
+		image = kwargs.pop('image', character)
 
 		if b == None:
 			b = self.cy
@@ -563,6 +563,9 @@ class Window(object):
 		for x in range(self.width):
 			y = A * function(m*x) + b
 			self.draw( (x,y), image, *args, **kwargs)
+			if delay > 0:
+				sleep(delay)
+				self.display()
 	
 	def draw_axis(self, axis='x', position=0, *args, **kwargs):
 		"""Draws a simple x- or y-axis."""
@@ -592,8 +595,56 @@ class Window(object):
 		# draw tic marks
 		pass
 
-	def graph(self, function, origin=(0,0), scale=[2,1], bounds=None):
-		pass
+	def graph(self, function, origin=(0,0), scale=[2,1],
+			  bounds=None, axis='xy', axis_color=None, delay=0,
+			  *args, **kwargs):
+		"""
+		Graph a function in the form at the specified origin or in the specified
+		x and y range.
+
+		If delay is a non-zero number, then the graph will "animate" with the 
+		specified delay after each "frame".
+
+		"""
+		color_arg, on_color_arg, attrs_arg, character = \
+		self._get_character_args(*args, **kwargs)
+
+		# get image (or character) to draw at each point
+		image = kwargs.pop('image', character)
+		
+		# get origin and axis scale
+		if bounds == None:
+			(x0,y0) = origin
+			[scale_x, scale_y] = scale
+
+		elif type(bounds) == type([]) and len(bounds) == 4:
+			x_min, x_max, y_min, y_max, = bounds
+
+			scale_x = 1.0 * (x_max-x_min) / self.width
+			scale_y = 1.0 * (y_max-y_min) / self.height
+			x0 = -1.0 * (x_min / scale_x)
+			y0 = -1.0 * (y_min / scale_y)
+
+		# Drax axes (or axis)
+		if axis.lower() in ['xy', 'yx', '']:
+			self.draw_axes( (x0,y0), color=axis_color )
+		elif axis.lower() == 'x':
+			self.draw_axis( axis='x', position=y0, color=axis_color )
+		elif axis.lower() == 'y':
+			self.draw_axis( axis='y', position=x0, color=axis_color )
+		
+		# graph function (shifted and scaled)
+		for i in range(self.width):
+			try:
+				x = (i - x0) * scale_x
+				y = function(x)
+				j = (y / scale_y) + y0
+				self.draw( (i,j), image, *args, **kwargs)
+				if delay > 0:
+					sleep(delay)
+					self.display()
+			except:
+				pass
 
 	def draw_under(self, function, origin=(0,0)):
 		pass
