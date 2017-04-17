@@ -743,7 +743,9 @@ class Window(object):
 				axis_point = ((x0+0.5), y)
 
 			# draw line from function value to origin, excluding endpoints
-			self.plot_line((x,y), axis_point, endpoints=False, *args, **kwargs)
+			# (do not draw over origin axis)
+			if int(x) != int(x0):
+				self.plot_line((x,y), axis_point, endpoints=False, *args, **kwargs)
 
 			if delay is not None:
 				sleep(delay)
