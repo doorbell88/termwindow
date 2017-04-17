@@ -19,12 +19,14 @@ def sin_x(x):
 def sin_x_over_x(x):
 	return 1.0 * (math.sin(1.0 * x) / x) 
 
-bounds=[-15,15,-0.3,1.1]
+CL, orig = window.graph(sin_x, origin=(50,30), scale=[1.0/6, 1.0/6], 
+	image='..', delay=0.001, color='magenta', axis_color='white')
+window.draw_under(CL, character='|', color='blue', origin=orig, delay=0.001)
 
-#pdb.set_trace()
-#window.graph(sin_x, origin=(20,10), scale=[2.0/5, 1.0/5], 
-	#image='..', delay=0.001, color='magenta', axis_color='white')
+sleep(1)
+window.erase()
 
+bounds=[-10,25,-0.3,1.1]
 CL, orig = window.graph(sin_x_over_x, bounds=bounds, connect_dots=True,
 	image='*', delay=0.001, color='red', axis_color='white')
 window.draw_under(CL, character='|', color='yellow', origin=orig, delay=0.001)
