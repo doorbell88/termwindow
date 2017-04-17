@@ -206,6 +206,8 @@ class Window(object):
 		y = int(coordinate[1])
 		try:
 			self.stage[x][y] = self.background[x][y]
+		except IndexError:
+			pass
 		except:
 			self.stage[x][y] = ' '
 	
@@ -443,6 +445,7 @@ class Window(object):
 		# get line and step arguments
 		line = kwargs.get('line', 'segment')
 		step = kwargs.get('step', 'step')
+		endpoints = kwargs.pop('endpoints', True)
 
 		# define x2 and y2 if p2 is not a coordinate
 		if p2 == 'vertical':
@@ -473,7 +476,7 @@ class Window(object):
 			x_min, x_max = self._endpoints(f, x1,x2, 'x', line)
 			x_domain = range(int(x_min), int(x_max+1))
 			for x in x_domain:
-				y = f(x)
+				y = f(x) * 1.0
 				if self.is_in_bounds((x,y)):
 					if step == 'step':
 							coordinate_list.append((x,y))
@@ -487,13 +490,21 @@ class Window(object):
 			y_min, y_max = self._endpoints(f, y1,y2, 'y', line)
 			y_domain = range(int(y_min), int(y_max+1))
 			for y in y_domain:
-				x = f(y)
+				x = f(y) * 1.0
 				if self.is_in_bounds((x,y)):
 					if step == 'step':
 							coordinate_list.append((x,y))
 					else:
 						if int(f(y)) != int(f(y+1)):
 							coordinate_list.append((x,y))
+
+		# remove endpoints if desired:
+		if endpoints == False:
+			if len(coordinate_list) >= 2:
+				del(coordinate_list[0])
+				del(coordinate_list[-1])
+			elif len(coordinate_list) < 2:
+				coordinate_list = []
 
 		return coordinate_list
 	
@@ -714,8 +725,35 @@ class Window(object):
 		return coordinate_list, (x0,y0)
 
 	# draw lines under a function (ex: for integral)
-	def draw_under(self, function, origin=(0,0)):
-		pass
+	def draw_under(self, coordinate_list, origin=(0,0), d='x', delay=None,
+				   *args, **kwargs):
+		(x0,y0) = origin
+		
+		fill_list = []
+		for coordinate in coordinate_list:
+			(x,y) = coordinate
+
+			# get vertical fill lines for dx,
+			#     horizontal fill lines for dy
+			if d.lower() == 'x':
+				y += 0.5
+				axis_point = (x, (y0+0.5))
+			elif d.lower() == 'y':
+				x += 0.5
+				axis_point = ((x0+0.5), y)
+
+			# draw line from function value to origin, excluding endpoints
+			self.plot_line((x,y), axis_point, endpoints=False, *args, **kwargs)
+
+			if delay is not None:
+				sleep(delay)
+				self.display()
+
+	#		to_fill = self.plot_line((x,y), axis_point, endpoints=False)
+	#		fill_list += to_fill
+	#	self.plot_list(fill_list, image='|', delay=delay)
+
+		return
 
 
 # Thing to be drawn in the window
@@ -854,7 +892,7 @@ class Thing(object):
 	# erase current position, and draw on a new coordinate
 	def place(self, coordinate):
 		"""Simply place the image at a new location."""
-		self.erase()
+		#self.erase()
 		self.position = coordinate
 		self.draw()
 
