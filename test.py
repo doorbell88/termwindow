@@ -34,7 +34,8 @@ fill = window.draw_under(CL, character='|', color='yellow', origin=orig, delay=0
 window.display()
 sleep(1)
 
-window.erase_list(fill)
+window.erase_list(fill, delay=0.001)
+window.plot_list(CL, '*', 'red')
 window.display()
 window.exit()
 sleep(0.5)

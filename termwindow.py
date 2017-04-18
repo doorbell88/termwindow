@@ -248,6 +248,8 @@ class Window(object):
 
 		# get image (or character) to draw at each point
 		image = kwargs.pop('image', character)
+
+		# get delay, if any
 		delay = kwargs.get('delay', None)
 		
 		# draw image at each coordinate in the list
@@ -258,22 +260,36 @@ class Window(object):
 				self.display()
 	
 	# refresh all coordinates in list back to their background
-	def erase_list(self, coordinate_list):
+	def erase_list(self, coordinate_list, *args, **kwargs):
 		"""
 		Erases all points in a list of coordinates.
 		Each point reverts to its background value.
 		"""
+		# get delay, if any
+		delay = kwargs.get('delay', None)
+
+		# erase each coordinate in the list
 		for coordinate in coordinate_list:
 			self.erase_point(coordinate)
+			if delay is not None:
+				sleep(delay)
+				self.display()
 
 	# deletes all coordinate points in list (point becomes a single space)
-	def delete_list(self, coordinate_list):
+	def delete_list(self, coordinate_list, *args, **kwargs):
 		"""
 		Deletes all points in a list of coordinates.
 		Each point becomes a single space.
 		"""
+		# get delay, if any
+		delay = kwargs.get('delay', None)
+
+		# erase each coordinate in the list
 		for coordinate in coordinate_list:
 			self.delete_point(coordinate)
+			if delay is not None:
+				sleep(delay)
+				self.display()
 
 	# plot a rectangular area defined by two corners
 	def plot_area(self, c1, c2, *args, **kwargs):
@@ -622,16 +638,19 @@ class Window(object):
 
 		# plot the last line, if desired
 		if wrap == True:
-			self.plot_line(coordinate[0], coordinate[-1], *args, **kwargs)
+			line_list += self.plot_line(coordinate[0], coordinate[-1], *args, **kwargs)
 
 		# plot the rest of points, and plot lines between each consecutive points
+		line_list = []
 		for i in range(1, len(coordinate_list)):
-			self.plot_line(coordinate_list[i-1], coordinate_list[i],
-						   image=image, *args, **kwargs)
+			line_list += self.plot_line(coordinate_list[i-1], coordinate_list[i],
+									    image=image, *args, **kwargs)
 			self.draw(coordinate_list[i], image=image, *args, **kwargs)
 			if delay is not None:
 				sleep(delay)
 				self.display()
+
+		return line_list
 			
 	# draw an x-axis or y-axis
 	def draw_axis(self, axis='x', position=0, *args, **kwargs):
@@ -736,8 +755,9 @@ class Window(object):
 			pass
 		
 		if connect_dots == True:
-			self.connect_dots(coordinate_list, image=image, delay=delay, wrap=False, 
-							  *args, **kwargs)
+			coordinate_list = self.connect_dots(coordinate_list, image=image,
+												delay=delay, wrap=False, 
+							  					*args, **kwargs)
 		else:
 			self.plot_list(coordinate_list, image=image, delay=delay, *args, **kwargs)
 
