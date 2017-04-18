@@ -29,8 +29,12 @@ window.erase()
 bounds=[-10,25,-0.3,1.1]
 CL, orig = window.graph(sin_x_over_x, bounds=bounds, connect_dots=True,
 	image='*', delay=0.001, color='red', axis_color='white')
-window.draw_under(CL, character='|', color='yellow', origin=orig, delay=0.001)
+fill = window.draw_under(CL, character='|', color='yellow', origin=orig, delay=0.001)
 
+window.display()
+sleep(1)
+
+window.erase_list(fill)
 window.display()
 window.exit()
 sleep(0.5)

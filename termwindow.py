@@ -150,6 +150,7 @@ class Window(object):
 				col_string += self.stage[col][(self.height - row)]
 			print col_string
 
+	# get character, color, on_color, and attributes from *args, **kwargs
 	def _get_character_args(self, *args, **kwargs):
 		"""Gets character, color, on_color, and attributes from *args, **kwargs"""
 		# Blank variables to start
@@ -211,7 +212,7 @@ class Window(object):
 		except:
 			self.stage[x][y] = ' '
 	
-	# refresh a coordinate point back to its background
+	# delete a coordinate point (point becomes a single space)
 	def delete_point(self, coordinate):
 		"""Deletes a point on the stage (so it is a single space: ' ')."""
 		x = int(coordinate[0])
@@ -255,6 +256,24 @@ class Window(object):
 			if delay is not None:
 				sleep(delay)
 				self.display()
+	
+	# refresh all coordinates in list back to their background
+	def erase_list(self, coordinate_list):
+		"""
+		Erases all points in a list of coordinates.
+		Each point reverts to its background value.
+		"""
+		for coordinate in coordinate_list:
+			self.erase_point(coordinate)
+
+	# deletes all coordinate points in list (point becomes a single space)
+	def delete_list(self, coordinate_list):
+		"""
+		Deletes all points in a list of coordinates.
+		Each point becomes a single space.
+		"""
+		for coordinate in coordinate_list:
+			self.delete_point(coordinate)
 
 	# plot a rectangular area defined by two corners
 	def plot_area(self, c1, c2, *args, **kwargs):
@@ -745,17 +764,15 @@ class Window(object):
 			# draw line from function value to origin, excluding endpoints
 			# (do not draw over origin axis)
 			if int(x) != int(x0):
-				self.plot_line((x,y), axis_point, endpoints=False, *args, **kwargs)
+				to_fill = self.plot_line((x,y), axis_point, endpoints=False,
+										   *args, **kwargs)
+			fill_list += to_fill
 
 			if delay is not None:
 				sleep(delay)
 				self.display()
 
-	#		to_fill = self.plot_line((x,y), axis_point, endpoints=False)
-	#		fill_list += to_fill
-	#	self.plot_list(fill_list, image='|', delay=delay)
-
-		return
+		return fill_list
 
 
 # Thing to be drawn in the window
