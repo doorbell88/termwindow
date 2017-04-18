@@ -619,7 +619,8 @@ class Window(object):
 			self.delete_point( coordinate ) 
 
 	# draw lines between each dot in a list of coordinates
-	def connect_dots(self, coordinate_list, image, wrap=True, delay=None, *args, **kwargs):
+	def connect_dots(self, coordinate_list, image, wrap=True, delay=None,
+					 *args, **kwargs):
 		"""Draws a line between each two consecutive coordinates in a
 		coordinate list.
 
@@ -786,13 +787,43 @@ class Window(object):
 			if int(x) != int(x0):
 				to_fill = self.plot_line((x,y), axis_point, endpoints=False,
 										   *args, **kwargs)
-			fill_list += to_fill
+				fill_list += to_fill
 
 			if delay is not None:
 				sleep(delay)
 				self.display()
 
 		return fill_list
+
+	# draw lines under a function (ex: for integral)
+	def erase_under(self, coordinate_list, origin=(0,0), d='x', delay=None,
+				   *args, **kwargs):
+		(x0,y0) = origin
+		
+		for coordinate in coordinate_list:
+			(x,y) = coordinate
+
+			# get vertical fill lines for dx,
+			#     horizontal fill lines for dy
+			if d.lower() == 'x':
+				y += 0.5
+				axis_point = (x, (y0+0.5))
+			elif d.lower() == 'y':
+				x += 0.5
+				axis_point = ((x0+0.5), y)
+
+			# draw line from function value to origin, excluding endpoints
+			# (do not draw over origin axis)
+			if int(x) != int(x0):
+				clear_line = self._define_line((x,y), axis_point, endpoints=False,
+										       *args, **kwargs)
+				for point in clear_line:
+					if point not in coordinate_list:
+						self.erase_point(point)
+
+			if delay is not None:
+				sleep(delay)
+				self.display()
 
 
 # Thing to be drawn in the window

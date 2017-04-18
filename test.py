@@ -23,18 +23,21 @@ CL, orig = window.graph(sin_x, origin=(50,30), scale=[1.0/6, 1.0/6],
 	image='..', delay=0.001, color='magenta', axis_color='white')
 window.draw_under(CL, character='|', color='blue', origin=orig, delay=0.001)
 
-sleep(1)
+sleep(0.5)
 window.erase()
 
 bounds=[-10,25,-0.3,1.1]
 CL, orig = window.graph(sin_x_over_x, bounds=bounds, connect_dots=True,
 	image='*', delay=0.001, color='red', axis_color='white')
+window.set_background()
 fill = window.draw_under(CL, character='|', color='yellow', origin=orig, delay=0.001)
 
 window.display()
 sleep(1)
 
-window.erase_list(fill, delay=0.001)
+window.erase_under(CL, origin=orig, delay=0.001)
+window.display()
+sleep(0.5)
 window.plot_list(CL, '*', 'red')
 window.display()
 window.exit()
