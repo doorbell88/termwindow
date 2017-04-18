@@ -182,6 +182,15 @@ class Window(object):
 
 		return color_arg, on_color_arg, attrs_arg, character
 
+	def _points_are_equal(self, p1, p2):
+		(p1x, p1y) = p1
+		(p2x, p2y) = p2
+		if int(p1x+0.5) == int(p2x+0.5) and \
+		   int(p1y+0.5) == int(p2y+0.5):
+			   return True
+		else:
+				return False
+
 	# plot a coordinate in a window list
 	def plot_point(self, coordinate, *args, **kwargs):
 		"""Plots a character at an (x,y) coordinate of self.stage"""
@@ -846,8 +855,15 @@ class Window(object):
 				clear_line = self._define_line((x,y), axis_point, endpoints=False,
 										       *args, **kwargs)
 				for point in clear_line:
-					if point not in coordinate_list:
-						self.erase_point(point)
+					for coord in coordinate_list:
+						if self._points_are_equal(point, coord):
+							break
+						else:
+							self.erase_point(point)
+
+				#for point in clear_line:
+				#	if point not in coordinate_list:
+				#		self.erase_point(point)
 
 			if delay is not None:
 				sleep(delay)
