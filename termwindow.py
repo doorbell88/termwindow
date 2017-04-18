@@ -104,6 +104,9 @@ class Window(object):
 		self.blank = deepcopy(self.stage)
 		self.background = deepcopy(self.stage)
 
+
+	#--------------------------- WINDOW BASICS ---------------------------------
+								 
 	# set stage as background
 	def erase(self):
 		"""Return entire stage to background."""
@@ -149,6 +152,9 @@ class Window(object):
 			for col in range(self.width+1):
 				col_string += self.stage[col][(self.height - row)]
 			print col_string
+
+
+	#------------------------------- POINTS ------------------------------------
 
 	# get character, color, on_color, and attributes from *args, **kwargs
 	def _get_character_args(self, *args, **kwargs):
@@ -222,6 +228,9 @@ class Window(object):
 		except:
 			self.stage[x][y] = ' '
 	
+
+	#------------------------------- LISTS -------------------------------------
+
 	# generate a list of points inside a rectangular area defined by 2 corners
 	def _define_area(self, c1, c2):
 		"""Returns a list containting all coordinates of a rectangular area
@@ -291,6 +300,10 @@ class Window(object):
 				sleep(delay)
 				self.display()
 
+
+	#------------------------------- AREAS ------------------------------------
+									
+
 	# plot a rectangular area defined by two corners
 	def plot_area(self, c1, c2, *args, **kwargs):
 		"""Plot points in a rectangular area defined by the coordinates of two
@@ -314,6 +327,10 @@ class Window(object):
 		area = self._define_area(c1, c2)
 		for coordinate in area:
 			self.delete_point(coordinate)
+
+
+	#------------------------------- IMAGES ------------------------------------
+									
 
 	# draw a multi-character "image"
 	def draw(self, coordinate, image, *args, **kwargs):
@@ -376,6 +393,10 @@ class Window(object):
 	def is_in_bounds(self, coordinate):
 		"""Returns True if coordinate is inside the border."""
 		return self.is_in_area(coordinate, 1, self.width-1, 1, self.height-1)
+
+
+	#----------------------------- FUNCTIONS -----------------------------------
+								  
 
 	# get direction of 'a' (x or y) --> (+1 or -1)
 	def _a_dir(self, a1,a2):
@@ -453,6 +474,10 @@ class Window(object):
 			y = m*x + y0
 			return y
 		return ret
+
+
+	#------------------------------- LINES -------------------------------------
+									
 
 	# define a line given coordinates, character, line type, and step type
 	def _define_line(self, p1, p2, *args, **kwargs):
@@ -653,6 +678,9 @@ class Window(object):
 
 		return line_list
 			
+
+	#------------------------------ GRAPHING -----------------------------------
+								   
 	# draw an x-axis or y-axis
 	def draw_axis(self, axis='x', position=0, *args, **kwargs):
 		"""Draws a simple x- or y-axis."""
