@@ -411,7 +411,7 @@ class Window(object):
 		return self.is_in_area(coordinate, 1, self.width-1, 1, self.height-1)
 
 
-	#----------------------------- FUNCTIONS -----------------------------------
+	#------------------------------- LINES -------------------------------------
 								  
 
 	# get direction of 'a' (x or y) --> (+1 or -1)
@@ -490,10 +490,6 @@ class Window(object):
 			y = m*x + y0
 			return y
 		return ret
-
-
-	#------------------------------- LINES -------------------------------------
-									
 
 	# define a line given coordinates, character, line type, and step type
 	def _define_line(self, p1, p2, *args, **kwargs):
@@ -800,9 +796,9 @@ class Window(object):
 			pass
 		
 		if connect_dots == True:
-			coordinate_list = self.connect_dots(coordinate_list, image=image,
-												delay=delay, wrap=False, 
-							  					*args, **kwargs)
+			self.connect_dots(coordinate_list, image=image,
+							  delay=delay, wrap=False, 
+							  *args, **kwargs)
 		else:
 			self.plot_list(coordinate_list, image=image, delay=delay, *args, **kwargs)
 
@@ -861,16 +857,11 @@ class Window(object):
 			if int(x) != int(x0):
 				clear_line = self._define_line((x,y), axis_point, endpoints=False,
 										       *args, **kwargs)
-				for point in clear_line:
-					for coord in coordinate_list:
-						if self._points_are_equal(point, coord):
-							break
-						else:
-							self.erase_point(point)
 
-				#for point in clear_line:
-				#	if point not in coordinate_list:
-				#		self.erase_point(point)
+				# erase all points in current cross-section up until graph
+				for point in clear_line:
+					if point not in coordinate_list:
+						self.erase_point(point)
 
 			if delay is not None:
 				sleep(delay)
