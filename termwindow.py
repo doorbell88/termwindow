@@ -182,11 +182,18 @@ class Window(object):
 
 		return color_arg, on_color_arg, attrs_arg, character
 
+	# returns True if two coordinates evaluate as the same point
 	def _points_are_equal(self, p1, p2):
+		"""
+		Returns True if two points are the same.
+		
+		This is helpful for if two coordinates are floats, but evaluate
+		as the same point in the integer-space of the window.
+		"""
 		(p1x, p1y) = p1
 		(p2x, p2y) = p2
-		if int(p1x+0.5) == int(p2x+0.5) and \
-		   int(p1y+0.5) == int(p2y+0.5):
+		if int(p1x) == int(p2x) and \
+		   int(p1y) == int(p2y):
 			   return True
 		else:
 				return False
